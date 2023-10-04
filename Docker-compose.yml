@@ -1,0 +1,64 @@
+version: '3'
+
+services: 
+
+  app: 
+    build:
+        context: node
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s node index.js
+    command: bash -c "npm install && node index.js"
+    networks:
+        - node-network
+    volumes:
+      - ./node:/usr/src/app
+    tty: true
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx:/home/desenv/dockerfullcicle/nginx
+      - ./nginx:/etc/nginx/conf.d  
+    depends_on:
+      - app
+      - db
+    networks:
+      - node-network
+
+  db:
+      image: mysql:latest
+      command: --innodb-use-native-aio=0
+      container_name: db
+      restart: always
+      tty: true
+      volumes:
+        - ./mysql:/var/lib/mysql
+      environment: 
+        - MYSQL_DATABASE=nodedb
+        - MYSQL_ROOT_PASSWORD=root
+      networks:
+        - node-network
+networks:
+  node-network:
+    driver: bridge
+
+volumes:
+  nginxconf:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './nginx/'
+
+  appvolume:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './node/'
