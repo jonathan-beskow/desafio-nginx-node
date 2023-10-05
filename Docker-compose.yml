@@ -31,7 +31,7 @@ services:
       - node-network
 
   db:
-    image: mysql:latest
+    image: mysql:5.7
     command: --innodb-use-native-aio=0
     container_name: db
     restart: always
