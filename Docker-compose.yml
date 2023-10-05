@@ -1,20 +1,19 @@
 version: '3'
 
 services: 
-
   app: 
     build:
-        context: node
+      context: node  
     container_name: app
-    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s node index.js
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s
     command: bash -c "npm install && node index.js"
     networks:
-        - node-network
+      - node-network
+    depends_on:
+      - db
     volumes:
       - ./node:/usr/src/app
     tty: true
-    depends_on:
-      - db
 
   nginx:
     image: nginx:latest
@@ -32,18 +31,19 @@ services:
       - node-network
 
   db:
-      image: mysql:latest
-      command: --innodb-use-native-aio=0
-      container_name: db
-      restart: always
-      tty: true
-      volumes:
-        - ./mysql:/var/lib/mysql
-      environment: 
-        - MYSQL_DATABASE=nodedb
-        - MYSQL_ROOT_PASSWORD=root
-      networks:
-        - node-network
+    image: mysql:latest
+    command: --innodb-use-native-aio=0
+    container_name: db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment: 
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - node-network
+
 networks:
   node-network:
     driver: bridge
